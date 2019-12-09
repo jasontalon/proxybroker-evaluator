@@ -18,7 +18,7 @@ class Evaluator {
         const hasErrorsInIpLookup = result!.ip.error,
           hasErrorsInPing = result!.ping.some(p => p.error),
           titles = result!.ping.map(p => p.data.title).join("||"),
-          blocked = /(access denied|attention required|restrict|robot check)/gim.test(
+          blocked = /(access denied|attention required|restrict|robot check|security check required)/gim.test(
             titles
           );
         proxy.passed = !hasErrorsInIpLookup && !hasErrorsInPing && !blocked;

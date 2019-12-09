@@ -23,7 +23,7 @@ const appLogger = {
     );
   }
 };
-(async () => {
++(async function() {
   const start = moment();
   appLogger.start(start);
   const proxies = await new ProxyBroker().search(countries, limit);
@@ -37,5 +37,5 @@ const appLogger = {
     .then(i => i.evaluate())
     .then(i => i.collect());
 
-  appLogger.finished(start);
+  appLogger.finished(start); 
 })();

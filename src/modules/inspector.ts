@@ -19,7 +19,7 @@ class Inspector {
     try {
       page.setDefaultTimeout(this.timeout);
 
-      await page.goto(url, { waitUntil: "networkidle2" });
+      await page.goto(url, { waitUntil: "domcontentloaded" });
       data = {
         title: await page.title(),
         body: await page.$eval("body", el => (el as HTMLElement).innerText)

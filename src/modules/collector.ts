@@ -25,7 +25,9 @@ class Collector {
     const query = `mutation { insert_proxy(objects: ${proxies}, on_conflict: {constraint: proxy_pkey, update_columns: created_at}) { affected_rows } }`;
 
     const {
-      data: { insert_proxy: { affected_rows = 0 } = {}, errors = null } = {}
+      data: {
+        data: { insert_proxy: { affected_rows = 0 } = {}, errors = null } = {}
+      }
     } = await Axios.post(
       GRAPHQL_ENDPOINT,
       { query },

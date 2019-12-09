@@ -79,7 +79,8 @@ export default class Manager {
         inspector = new Inspector(browser, timeoutMs),
         { result } = await inspector
           .lookupAddress()
-          .then(i => i.ping("https://www.cloudflare.com/"));
+          .then(i => i.ping("https://www.cloudflare.com/"))
+          .then(i => i.ping("https://www.facebook.com/RoyalBotanicGarden/"));
 
       return result;
     } catch (err) {
