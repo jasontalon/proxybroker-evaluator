@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
-import { timestamp } from "./util";
+import { timestamp } from "../util";
 import { white, black } from "chalk";
-import { log } from "console";
+import { log } from "console"; 
 
 export default class Reporter {
   listen(announcement: EventEmitter) {

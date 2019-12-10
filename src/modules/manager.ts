@@ -1,8 +1,8 @@
-import Evaluator, { ProxyInspectionResult } from "./modules/evaluator";
-import Inspector, { Result } from "./modules/inspector";
-import Puppeteer from "./modules/puppeteer";
+import Evaluator, { ProxyInspectionResult } from "./evaluator";
+import Inspector, { Result } from "./inspector";
+import Puppeteer from "./puppeteer";
 import { Browser } from "puppeteer";
-import Collector from "./modules/collector";
+import Collector from "./collector";
 import { EventEmitter } from "events";
 
 const { BROWSER_WS_ENDPOINT = "" } = process.env;
@@ -79,7 +79,7 @@ export default class Manager {
         inspector = new Inspector(browser, timeoutMs),
         { result } = await inspector
           .lookupAddress()
-          .then(i => i.ping("https://www.cloudflare.com/"))
+          .then(i => i.ping("https://www.cloudflare.com/")) 
           .then(i => i.ping("https://www.facebook.com/RoyalBotanicGarden/"));
 
       return result;
