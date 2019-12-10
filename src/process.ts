@@ -33,7 +33,8 @@ export default {
 
     await manager
       .receive(proxies)
-      .inspect()
+      .check()
+      .then(i => i.inspect())
       .then(i => i.evaluate())
       .then(i => i.collect());
 
