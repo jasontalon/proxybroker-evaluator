@@ -6,7 +6,6 @@ import Collector from "./collector";
 import { EventEmitter } from "events";
 import moment = require("moment");
 import Axios from "axios";
-import { emit } from "cluster";
 
 const {
   BROWSER_WS_ENDPOINT = "",
@@ -71,7 +70,10 @@ export default class Manager {
       proxy => !existingProxiesArr.includes(proxy)
     );
 
-    this.announcement.emit("check", existingProxiesArr.length);
+    this.announcement.emit("check", {
+      total: this.proxies.length,
+      existing: existingProxiesArr.length
+    });
 
     return this;
   }

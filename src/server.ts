@@ -7,28 +7,68 @@ import bodyParser from "body-parser";
 
 import moment from "moment";
 import Process from "./process";
+import Reporter from "./modules/reporter";
 
-let COUNTRIES: string = "US",
-  LIMIT: number = 3,
-  CRON: string = "0 */3 * * * *",
-  IS_CURRENTLY_RUNNING: boolean = false,
-  SERVICE_STARTED: string = "",
-  PREVIOUS_RUN = {
-    STARTED: "",
-    ENDED: ""
-  };
+let CRON: string = "0 */3 * * * *",
+  TASK: {
+    STATUS: string;
+    PARAMS: {
+      COUNTRIES: string;
+      LIMIT: number;
+    };
+    REPORTER: {
+      MESSAGES: Array<string>;
+    };
+  } = {
+    STATUS: "IDLE",
+    PARAMS: {
+      COUNTRIES: "US",
+      LIMIT: 3
+    },
+    REPORTER: {
+      MESSAGES: []
+    }
+  },
+  SERVICE: {
+    STARTED_AT_UTC: string;
+    STATUS: string;
+  },
+  PREVIOUS_TASK: {
+    STARTED_AT_UTC: string;
+    FINISHED_AT_UTC: string;
+    ERROR: string | null;
+    REPORTER: {
+      MESSAGES: Array<string>;
+    };
+  },
+  REPORTER: Reporter | null;
 
 const app = express(),
   { PORT = 8080 } = process.env;
 
-const JOB = function() {
-  IS_CURRENTLY_RUNNING = true;
+const JOB = async function() {
   const start = moment();
-  Process.start(COUNTRIES, LIMIT).then(function() {
-    IS_CURRENTLY_RUNNING = false;
-    PREVIOUS_RUN.STARTED = start.toISOString();
-    PREVIOUS_RUN.ENDED = moment().toISOString();
-  });
+  let error: string | null;
+  try {
+    TASK.STATUS = "RUNNING";
+
+    const { COUNTRIES, LIMIT } = TASK.PARAMS;
+    REPORTER = new Reporter();
+    await Process.start(COUNTRIES, LIMIT, REPORTER);
+  } catch (err) {
+    error = JSON.stringify(err);
+  } finally {
+    TASK.STATUS = "IDLE";
+    PREVIOUS_TASK = {
+      STARTED_AT_UTC: start.toISOString(),
+      FINISHED_AT_UTC: moment().toISOString(),
+      ERROR: error!,
+      REPORTER: {
+        MESSAGES: REPORTER!.messages
+      }
+    };
+    REPORTER = null;
+  }
 };
 
 let task = new CronJob(CRON!, JOB);
@@ -37,43 +77,94 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.set("json spaces", 2);
 
-app.post("/set", function(req, res) {
-  if (IS_CURRENTLY_RUNNING) {
-    res
-      .status(400)
-      .send(
-        "Task is currently running. To avoid collision, please send the request later."
-      );
-    return;
+app.post("/start", function(req, res) {
+  if (task.running) sendMessage(res, "already started.", 403);
+  else if (!sendResponseIfTaskIsRunning(TASK.STATUS, res)) {
+    task.start();
+    REPORTER = null;
+    SERVICE.STATUS = "STARTED";
+    TASK.STATUS = "IDLE";
+    SERVICE.STARTED_AT_UTC = moment().toISOString();
+
+    PREVIOUS_TASK = {
+      ERROR: null,
+      STARTED_AT_UTC: "",
+      FINISHED_AT_UTC: "",
+      REPORTER: {
+        MESSAGES: []
+      }
+    };
+    sendMessage(res, "OK");
   }
-
-  const { cron = "0 */30 * * * *", countries = "US", limit = "10" } = req.body;
-
-  task.stop();
-
-  COUNTRIES = countries;
-  LIMIT = limit;
-  CRON = cron;
-
-  task = new CronJob(CRON, JOB);
-
-  task.start();
-  res.status(200).send("OK");
 });
 
-app.get("/", function(req, res) {
+app.post("/stop", function(req, res) {
+  if (!task.running) sendMessage(res, "already stopped.", 403);
+  else if (!sendResponseIfTaskIsRunning(TASK.STATUS, res)) {
+    task.stop();
+    REPORTER = null;
+    TASK.STATUS = SERVICE.STATUS = "STOPPED";
+    sendMessage(res, "OK");
+  }
+});
+
+app.post("/set", function(req, res) {
+  const { cron = "0 */30 * * * *", countries = "US", limit = "10" } = req.body;
+
+  if (!sendResponseIfTaskIsRunning(TASK.STATUS, res)) {
+    TASK.STATUS = SERVICE.STATUS = "STOPPED";
+    task.stop();
+
+    TASK.PARAMS = {
+      COUNTRIES: countries,
+      LIMIT: limit
+    };
+
+    CRON = cron;
+
+    task = new CronJob(CRON, JOB);
+    REPORTER = null;
+    task.start();
+    TASK.STATUS = "IDLE";
+    SERVICE = {
+      STATUS: "STARTED",
+      STARTED_AT_UTC: moment().toISOString()
+    };
+    sendMessage(res, "OK");
+  }
+});
+
+app.get("/status", function(req, res) {
+  TASK.REPORTER = {
+    MESSAGES: REPORTER ? REPORTER.messages : []
+  };
+
+  if (SERVICE.STATUS == "STOPPED") TASK.STATUS = "STOPPED";
   res.send({
-    SERVICE_STARTED,
-    PREVIOUS_RUN,
     CRON,
-    COUNTRIES,
-    LIMIT,
-    IS_TASK_RUNNING: IS_CURRENTLY_RUNNING
+    SERVICE,
+    TASK,
+    PREVIOUS_TASK
   });
 });
 
+function sendMessage(res: any, message: string, status: number = 200) {
+  res.status(status).send({ message });
+}
+
+function sendResponseIfTaskIsRunning(status: string, response: any) {
+  if (status == "RUNNING") {
+    sendMessage(response, "Task is currently running.", 403);
+    return true;
+  }
+  return false;
+}
+
 app.listen(PORT, function() {
   log(`listens to port ${PORT}`);
-  SERVICE_STARTED = moment().toISOString();
   task.start();
+  SERVICE = {
+    STATUS: "STARTED",
+    STARTED_AT_UTC: moment().toISOString()
+  };
 });

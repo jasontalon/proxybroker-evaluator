@@ -1,35 +1,36 @@
 import moment, { Moment } from "moment";
-import { log } from "console";
 import ProxyBroker from "./modules/proxybroker";
 import Manager from "./modules/manager";
 import Reporter from "./modules/reporter";
 
 export default {
-  start: async function(countries: string, limit: number) {
+  start: async function(
+    countries: string,
+    limit: number,
+    reporter: Reporter = new Reporter()
+  ) {
     const appLogger = {
-        start(start: Moment) {
-          log(
-            "%s : begin search for proxy countries %s, limit %s",
-            start.toISOString(),
-            countries,
-            limit
+        start() {
+          reporter.logMessage(
+            `begin search for proxy countries ${countries}, limit ${limit}`
           );
         },
         finished(start: Moment) {
-          console.log(
-            "%s : finished. execution time: %ss",
-            moment().toISOString(),
-            moment().diff(start, "seconds")
+          reporter.logMessage(
+            `finished. execution time -> ${moment().diff(
+              start,
+              "seconds"
+            )} seconds`
           );
         }
       },
       start = moment();
-    appLogger.start(start);
+    appLogger.start();
 
     const proxies = await new ProxyBroker().search(countries, limit),
       manager = new Manager();
 
-    new Reporter().listen(manager.announcement);
+    reporter.listen(manager.announcement);
 
     await manager
       .receive(proxies)
