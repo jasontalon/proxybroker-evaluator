@@ -9,7 +9,7 @@ import moment from "moment";
 import Process from "./process";
 import Reporter from "./modules/reporter";
 
-let CRON: string = "0 */40 17-23 * * 1-5",
+let { CRON = "0 */40 17-23 * * 1-5" } = process.env,
   TASK: {
     STATUS: string;
     PARAMS: {
