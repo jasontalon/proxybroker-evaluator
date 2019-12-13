@@ -9,7 +9,7 @@ import moment from "moment";
 import Process from "./process";
 import Reporter from "./modules/reporter";
 
-let CRON: string = "0 */3 * * * *",
+let CRON: string = "0 */40 17-23 * * 1-5",
   TASK: {
     STATUS: string;
     PARAMS: {
@@ -22,8 +22,8 @@ let CRON: string = "0 */3 * * * *",
   } = {
     STATUS: "IDLE",
     PARAMS: {
-      COUNTRIES: "US",
-      LIMIT: 3
+      COUNTRIES: "US,CA,GB",
+      LIMIT: 35
     },
     REPORTER: {
       MESSAGES: []
