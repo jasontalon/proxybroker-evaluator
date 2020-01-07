@@ -19,10 +19,10 @@ server.post("/eval/:proxy", async (req, res) => {
   } = req;
 
   const result = await evaluate(proxy, url);
-  if (result.error || result.pingResult.error)
-    res
-      .status(400)
-      .send([result.error, result.pingResult.error].filter(p => p));
+
+  const errors = [result.error, result.pingResult.error].filter(p => p);
+  
+  if (errors) res.status(400).send(errors);
   return result.pingResult;
 });
 
