@@ -21,7 +21,7 @@ server.post("/eval/:proxy", async (req, res) => {
   const result = await evaluate(proxy, url);
 
   const errors = [result.error, result.pingResult.error].filter(p => p);
-  
+
   if (errors) res.status(400).send(errors);
   return result.pingResult;
 });

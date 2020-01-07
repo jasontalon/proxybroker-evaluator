@@ -1,11 +1,20 @@
-import { getInfo } from "./server";
+import { getInfo, evaluate } from "./server";
 
-describe("test server", () => {
+describe("test manager", () => {
   it("should test ip info", async () => {
     const proxy = "157.245.61.250:8080";
 
-    const info = await getInfo(proxy);
+    const { details } = await getInfo(proxy);
 
-    console.log(info);
+    expect(details).toEqual(expect.anything());
+  }, 60000);
+
+  it("should test ip info", async () => {
+    const proxy = "157.245.61.250:8080",
+      url = "https://www.duckduckgo.com/";
+
+    const { pingResult } = await evaluate(proxy, url);
+
+    expect(pingResult.data).toEqual(expect.anything());
   }, 60000);
 });
