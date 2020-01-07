@@ -1,5 +1,5 @@
 import puppeteer, { Browser } from "puppeteer";
-import { hasQueryString } from "../util";
+import { hasQueryString } from "./util";
 class Puppeteer {
   constructor(
     private headless: boolean = true,
@@ -31,6 +31,7 @@ class Puppeteer {
 
   async launch(): Promise<Browser> {
     const { args, headless, browserWSEndpoint, proxy } = this;
+
     if (proxy) args.push(`--proxy-server=${proxy}`);
     if (!proxy && !browserWSEndpoint && args.length == 0) {
       return await puppeteer.launch({
