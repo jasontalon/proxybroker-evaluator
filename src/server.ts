@@ -35,8 +35,6 @@ server.get("/info/:proxy", async (req, res) => {
 
 interface EnvironmentVariables {
   PORT?: number;
-  GQL_URL?: string;
-  GQL_HEADER?: string;
   BROWSER_WS_URL?: string;
 }
 
