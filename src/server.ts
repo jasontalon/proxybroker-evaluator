@@ -13,8 +13,10 @@ server.listen(PORT, () => {
 });
 
 server.post("/eval/:proxy", async (req, res) => {
-  const { proxy = "" } = req.params;
-  const { url = "" } = req.body;
+  const {
+    params: { proxy = "" },
+    body: { url = "" }
+  } = req;
 
   const result = await evaluate(proxy, url);
   if (result.error || result.pingResult.error)
